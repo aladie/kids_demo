@@ -6,7 +6,10 @@ load_dotenv(override=True)
 
 llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash")
 
-prompts = [("system", ""), ("human", "")]
+with open("src/prompts/SYSTEM_PROMPT.md", "r", encoding="UTF-8") as file:
+    system_prompt = file.read()
+
+prompts = [("system", system_prompt), ("human", "")]
 
 chain = llm | StrOutputParser()
 
