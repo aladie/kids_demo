@@ -2,6 +2,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.callbacks import get_usage_metadata_callback
 from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
+from better_profanity import profanity
 import os
 
 load_dotenv(override=True)
@@ -21,7 +22,15 @@ def send_request(user_prompt: str):
     prompts = [("system", system_prompt), ("human", user_prompt)]
 
     with get_usage_metadata_callback() as cb:
+        acc = ""
+
         for chunk in chain.stream(prompts):
+            acc += chunk
+
+            if profanity.contains_profanity(acc):
+                print("\n\n--- Streaming halted due to detected profanity. ---")
+                break
+
             print(chunk, end="", flush=True)
 
         # Get useage metadata
@@ -33,7 +42,7 @@ def send_request(user_prompt: str):
         total_cost = ((input_tokens / 1_000_000 * float(os.environ.get("INPUT_TOKEN_COST", 0))) + 
                       (output_tokens / 1_000_000 * float(os.environ.get("OUTPUT_TOKEN_COST", 0))))
 
-        print(f"\n\n-------------\n" +
+        print("\n\n-------------\n" +
               f"Total token useage: {total_tokens}" +
               f"\nTotal cost: {total_cost}$" +
-              f"\n-------------\n")
+              "\n-------------\n")
